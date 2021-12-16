@@ -374,7 +374,7 @@ namespace Microsoft.Xades
             }
 
             // Add "ds" namespace prefix to all XmlDsig nodes in the signature
-            SetPrefix("ds", retVal);
+            //SetPrefix("ds", retVal);
 
             return retVal;
         }
@@ -517,7 +517,7 @@ namespace Microsoft.Xades
                 bufferXmlElement = xadesObject.GetXml();
 
                 // Add "ds" namespace prefix to all XmlDsig nodes in the XAdES object
-                SetPrefix("ds", bufferXmlElement);
+                //SetPrefix("ds", bufferXmlElement);
 
                 this.cachedXadesObjectDocument.PreserveWhitespace = true;
                 this.cachedXadesObjectDocument.LoadXml(bufferXmlElement.OuterXml); //Cache to XAdES object for later use
@@ -528,6 +528,18 @@ namespace Microsoft.Xades
             {
                 throw new CryptographicException("Can't add XAdES object, the signature already contains a XAdES object");
             }
+        }
+
+        public void AddEmptyXadesObject()
+        {
+            //TODO Ќепонт€но пока что как используетс€ этот кеш вообще.
+            this.cachedXadesObjectDocument = new XmlDocument();
+            this.cachedXadesObjectDocument.LoadXml(@"<xades:QualifyingProperties xmlns:xades=""http://uri.etsi.org/01903/v1.4.1#""/>"); //Cache to XAdES object for later use
+            var dataObject = new DataObject();
+            dataObject.Id = "";
+            dataObject.Data = this.cachedXadesObjectDocument.ChildNodes;
+            this.AddObject(dataObject); //Add the XAdES object
+            this.signatureStandard = KnownSignatureStandard.Xades;
         }
 
         /// <summary>
@@ -1320,7 +1332,7 @@ namespace Microsoft.Xades
 
             foreach (XmlNode child in node.ChildNodes)
             {
-                SetPrefix(prefix, child);
+                //SetPrefix(prefix, child);
             }
 
             return;
@@ -1427,7 +1439,7 @@ namespace Microsoft.Xades
             {
                 //nodeList.Add(obj.GetXml());
                 XmlElement xml = obj2.GetXml();
-                SetPrefix("ds", xml); // <---
+                //SetPrefix("ds", xml); // <---
                 CanonicalXmlNodeList_Add.Invoke(nodeList, new object[] { xml });
                 //
             }
@@ -1453,7 +1465,7 @@ namespace Microsoft.Xades
                 {
                     //refList.Add(reference2.GetXml());
                     XmlElement xml = reference2.GetXml();
-                    SetPrefix("ds", xml); // <---
+                    //SetPrefix("ds", xml); // <---
                     CanonicalXmlNodeList_Add.Invoke(nodeList, new object[] { xml });
                     //
                 }
@@ -1507,7 +1519,7 @@ namespace Microsoft.Xades
                 Type Utils_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.Utils");
                 MethodInfo Utils_PreProcessElementInput = Utils_Type.GetMethod("PreProcessElementInput", BindingFlags.NonPublic | BindingFlags.Static);
                 XmlElement xml = this.SignedInfo.GetXml();
-                SetPrefix(prefix, xml); // <---
+                //SetPrefix(prefix, xml); // <---
                 XmlDocument document = (XmlDocument)Utils_PreProcessElementInput.Invoke(null, new object[] { xml, xmlResolver, securityUrl });
                 //
 

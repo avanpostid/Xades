@@ -1345,16 +1345,12 @@ namespace Microsoft.Xades
         public new void ComputeSignature()
         {
             this.BuildDigestedReferences();
-            AsymmetricAlgorithm signingKey = this.SigningKey;
-            if (signingKey == null)
+
+            if (SigningKey != null)
             {
-                throw new CryptographicException("Cryptography_Xml_LoadKeyFailed");
-            }
-            if (this.SignedInfo.SignatureMethod == null)
-            {
-                if (!(signingKey is DSA))
+                if (!(SigningKey is DSA))
                 {
-                    if (!(signingKey is RSA))
+                    if (!(SigningKey is RSA))
                     {
                         throw new CryptographicException("Cryptography_Xml_CreatedKeyFailed");
                     }
@@ -1368,21 +1364,34 @@ namespace Microsoft.Xades
                     this.SignedInfo.SignatureMethod = "http://www.w3.org/2000/09/xmldsig#dsa-sha1";
                 }
             }
-            SignatureDescription description = CryptoConfig.CreateFromName(this.SignedInfo.SignatureMethod) as SignatureDescription;
-            if (description == null)
+
+            if(EncryptMethod != null && HashMethod != null)
             {
-                throw new CryptographicException("Cryptography_Xml_SignatureDescriptionNotCreated");
+                var hashDigest = this.GetC14NDigest(null, null);
+                this.m_signature.SignatureValue = EncryptMethod(hashDigest);
             }
-            HashAlgorithm hash = description.CreateDigest();
-            if (hash == null)
+            else
             {
-                throw new CryptographicException("Cryptography_Xml_CreateHashAlgorithmFailed");
+                SignatureDescription description = CryptoConfig.CreateFromName(this.SignedInfo.SignatureMethod) as SignatureDescription;
+                if (description == null)
+                {
+                    throw new CryptographicException("Cryptography_Xml_SignatureDescriptionNotCreated");
+                }
+                HashAlgorithm hashAlgorithm = description.CreateDigest();
+                if (hashAlgorithm == null)
+                {
+                    throw new CryptographicException("Cryptography_Xml_CreateHashAlgorithmFailed");
+                }
+                //this.GetC14NDigest(hash);
+                var hashDigest = this.GetC14NDigest(hashAlgorithm, "ds");
+
+                this.m_signature.SignatureValue = description.CreateFormatter(SigningKey).CreateSignature(hashDigest);
             }
-            //this.GetC14NDigest(hash);
-            this.GetC14NDigest(hash, "ds");
-            //
-            this.m_signature.SignatureValue = description.CreateFormatter(signingKey).CreateSignature(hash);
         }
+
+        public Func<byte[], byte[]> EncryptMethod { get; set; }
+
+
 
         /// <summary>
         /// Copy of System.Security.Cryptography.Xml.SignedXml.BuildDigestedReferences() which will add a "ds" 
@@ -1551,7 +1560,16 @@ namespace Microsoft.Xades
                 canonicalizationMethodObject.LoadInput(document);
 
                 //this._digestedSignedInfo = canonicalizationMethodObject.GetDigestedOutput(hash);
-                SignedXml__digestedSignedInfo.SetValue(this, canonicalizationMethodObject.GetDigestedOutput(hash));
+                if(HashMethod != null)
+                {
+                    var outputBytes = ((MemoryStream)canonicalizationMethodObject.GetOutput()).ToArray();
+                    SignedXml__digestedSignedInfo.SetValue(this, HashMethod(outputBytes));
+                }
+                else
+                {
+                    SignedXml__digestedSignedInfo.SetValue(this, canonicalizationMethodObject.GetDigestedOutput(hash));
+                }
+                
                 //
 
                 //this.bCacheValid = true;
@@ -1564,6 +1582,8 @@ namespace Microsoft.Xades
             return _digestedSignedInfo;
             //
         }
+
+        public Func<byte[], byte[]> HashMethod { get; set; }
 
         #endregion
 

@@ -21,7 +21,12 @@ namespace Microsoft.Xades.UnitTest
             // certificate must be exportable
             var signature = XadesSignManager.SignExternalSHA256(references, cert);
 
+            references = new Dictionary<Uri, Stream>();
+            references.Add(new Uri("https://www.w3schools.com/xml/note.xml"), File.OpenRead(docPath));
+            var signature2 = XadesSignManager.SignWithHashMethodAndEncryptMethod(references, cert);
+
             Assert.IsNotNull(signature);
+            Assert.AreEqual(signature, signature2);
         }
 
         [TestMethod]

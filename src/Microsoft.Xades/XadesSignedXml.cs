@@ -289,8 +289,8 @@ namespace Microsoft.Xades
         }
         #endregion
 
-        private IXadesSignatureProvider _xadesSignatureProvider;
-        private IXadesDigestProvider _xadesDigestProvider;
+        public IXadesSignatureProvider XadesSignatureProvider;
+        public IXadesDigestProvider XadesDigestProvider;
 
         #region Constructors
         /// <summary>
@@ -321,12 +321,6 @@ namespace Microsoft.Xades
             this.cachedXadesObjectDocument = null;
         }
 
-        public XadesSignedXml(System.Xml.XmlDocument signatureDocument, IXadesSignatureProvider xadesSignProvider, IXadesDigestProvider xadesDigestProvider) : base(signatureDocument)
-        {
-            this.cachedXadesObjectDocument = null;
-            _xadesSignatureProvider = xadesSignProvider;
-            _xadesDigestProvider = xadesDigestProvider;
-        }
         #endregion
 
         #region Public methods
@@ -1358,7 +1352,7 @@ namespace Microsoft.Xades
 
             if (SigningKey != null)
             {
-                _xadesSignatureProvider = new DotnetXadesSignProvider(SigningKey);
+                XadesSignatureProvider = new DotnetXadesSignProvider(SigningKey);
 
                 if (!(SigningKey is DSA))
                 {
@@ -1380,7 +1374,7 @@ namespace Microsoft.Xades
             if (!IsC14NDigestCachedExistsAndValid())
             {
                 var canonicalizationMethodOutput = GetCanonicalizationMethodObjectOutput();
-                this.m_signature.SignatureValue = _xadesSignatureProvider.CreateSignature(this.SignedInfo.SignatureMethod, canonicalizationMethodOutput);
+                this.m_signature.SignatureValue = XadesSignatureProvider.CreateSignature(this.SignedInfo.SignatureMethod, canonicalizationMethodOutput);
             }
         }
 
@@ -1451,13 +1445,13 @@ namespace Microsoft.Xades
                 }
 
                 var m_containingDocument = (XmlDocument)SignedXml_m_containingDocument.GetValue(this);
-                if (_xadesDigestProvider != null)
+                if (XadesDigestProvider != null)
                 {
                     var hashInputStream = GetHashInputStream(reference2, m_containingDocument);
                     using (MemoryStream memoryStream = new MemoryStream())
                     {
                         hashInputStream.CopyTo(memoryStream);
-                        reference2.DigestValue = _xadesDigestProvider.ComputeDigest(reference2.DigestMethod, (memoryStream.ToArray()));
+                        reference2.DigestValue = XadesDigestProvider.ComputeDigest(reference2.DigestMethod, (memoryStream.ToArray()));
                     }
                 }
                 else

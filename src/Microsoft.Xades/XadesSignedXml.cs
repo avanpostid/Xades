@@ -378,7 +378,7 @@ namespace Microsoft.Xades
             }
 
             // Add "ds" namespace prefix to all XmlDsig nodes in the signature
-            //SetPrefix("ds", retVal);
+            SetPrefix("ds", retVal);
 
             return retVal;
         }
@@ -521,7 +521,7 @@ namespace Microsoft.Xades
                 bufferXmlElement = xadesObject.GetXml();
 
                 // Add "ds" namespace prefix to all XmlDsig nodes in the XAdES object
-                //SetPrefix("ds", bufferXmlElement);
+                SetPrefix("ds", bufferXmlElement);
 
                 this.cachedXadesObjectDocument.PreserveWhitespace = true;
                 this.cachedXadesObjectDocument.LoadXml(bufferXmlElement.OuterXml); //Cache to XAdES object for later use
@@ -536,7 +536,6 @@ namespace Microsoft.Xades
 
         public void AddEmptyXadesObject()
         {
-            //TODO Непонтяно пока что как используется этот кеш вообще.
             this.cachedXadesObjectDocument = new XmlDocument();
             this.cachedXadesObjectDocument.LoadXml(@"<xades:QualifyingProperties xmlns:xades=""http://uri.etsi.org/01903/v1.4.1#""/>"); //Cache to XAdES object for later use
             var dataObject = new DataObject();
@@ -1336,7 +1335,7 @@ namespace Microsoft.Xades
 
             foreach (XmlNode child in node.ChildNodes)
             {
-                //SetPrefix(prefix, child);
+                SetPrefix(prefix, child);
             }
 
             return;
@@ -1430,7 +1429,7 @@ namespace Microsoft.Xades
             {
                 //nodeList.Add(obj.GetXml());
                 XmlElement xml = obj2.GetXml();
-                //SetPrefix("ds", xml); // <---
+                SetPrefix("ds", xml); // <---
                 CanonicalXmlNodeList_Add.Invoke(nodeList, new object[] { xml });
                 //
             }
@@ -1465,14 +1464,14 @@ namespace Microsoft.Xades
                 {
                     //refList.Add(reference2.GetXml());
                     XmlElement xml = reference2.GetXml();
-                    //SetPrefix("ds", xml); // <---
+                    SetPrefix("ds", xml); // <---
                     CanonicalXmlNodeList_Add.Invoke(nodeList, new object[] { xml });
                     //
                 }
             }
         }
 
-        private Stream GetHashInputStream(Reference reference2, XmlDocument document) //TODO Добавить поддержку всех возможных вариантов сбора хеша Reference https://referencesource.microsoft.com/#System.Security/system/security/cryptography/xml/reference.cs,ca6173686922de7a,references
+        private Stream GetHashInputStream(Reference reference2, XmlDocument document) //TODO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ Reference https://referencesource.microsoft.com/#System.Security/system/security/cryptography/xml/reference.cs,ca6173686922de7a,references
         {
             Assembly System_Security_Assembly = Assembly.Load("System.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             Type SignedXml_Type = typeof(SignedXml);
@@ -1497,7 +1496,7 @@ namespace Microsoft.Xades
                 case 2:
 
                     if (document == null)
-                        throw new Exception("Пустое значение m_containingDocument");
+                        throw new Exception("пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ m_containingDocument");
 
                     Type Utils_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.Utils");
                     MethodInfo Utils_DiscardComments = Utils_Type.GetMethod("DiscardComments", BindingFlags.NonPublic | BindingFlags.Static);
@@ -1506,7 +1505,7 @@ namespace Microsoft.Xades
                     var docWithNoComments = Utils_DiscardComments.Invoke(null, new object[] { Utils_PreProcessDocumentInput.Invoke(null, new object[] { document, resolver, document.BaseURI }) });
                     return (Stream)TransformChain_TransformToOctetStream2.Invoke(reference2.TransformChain, new object[] { docWithNoComments, resolver, document.BaseURI });
                 default:
-                    throw new Exception("Не поддерживаемый тип Reference");
+                    throw new Exception("пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ Reference");
             }
         }
 
@@ -1572,6 +1571,7 @@ namespace Microsoft.Xades
             Type Utils_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.Utils");
             MethodInfo Utils_PreProcessElementInput = Utils_Type.GetMethod("PreProcessElementInput", BindingFlags.NonPublic | BindingFlags.Static);
             XmlElement xml = this.SignedInfo.GetXml();
+            SetPrefix("ds", xml);
             XmlDocument document = (XmlDocument)Utils_PreProcessElementInput.Invoke(null, new object[] { xml, xmlResolver, securityUrl });
             
             FieldInfo SignedXml_m_context = SignedXml_Type.GetField("m_context", BindingFlags.NonPublic | BindingFlags.Instance);

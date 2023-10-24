@@ -22,6 +22,7 @@ using System.Security.Cryptography.Xml;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Collections;
+using System.Linq;
 
 namespace Microsoft.Xades
 {
@@ -532,18 +533,7 @@ namespace Microsoft.Xades
             {
                 throw new CryptographicException("Can't add XAdES object, the signature already contains a XAdES object");
             }
-        }
-
-        public void AddEmptyXadesObject()
-        {
-            this.cachedXadesObjectDocument = new XmlDocument();
-            this.cachedXadesObjectDocument.LoadXml(@"<xades:QualifyingProperties xmlns:xades=""http://uri.etsi.org/01903/v1.4.1#""/>"); //Cache to XAdES object for later use
-            var dataObject = new DataObject();
-            dataObject.Id = "";
-            dataObject.Data = this.cachedXadesObjectDocument.ChildNodes;
-            this.AddObject(dataObject); //Add the XAdES object
-            this.signatureStandard = KnownSignatureStandard.Xades;
-        }
+        }        
 
         /// <summary>
         /// Additional tests for XAdES signatures.  These tests focus on
@@ -1446,7 +1436,7 @@ namespace Microsoft.Xades
                 var m_containingDocument = (XmlDocument)SignedXml_m_containingDocument.GetValue(this);
                 if (XadesDigestProvider != null)
                 {
-                    var hashInputStream = GetHashInputStream(reference2, m_containingDocument);
+                    var hashInputStream = GetHashInputStream(reference2, m_containingDocument, nodeList);
                     using (MemoryStream memoryStream = new MemoryStream())
                     {
                         hashInputStream.CopyTo(memoryStream);
@@ -1466,46 +1456,136 @@ namespace Microsoft.Xades
                     XmlElement xml = reference2.GetXml();
                     SetPrefix("ds", xml); // <---
                     CanonicalXmlNodeList_Add.Invoke(nodeList, new object[] { xml });
-                    //
                 }
             }
         }
 
-        private Stream GetHashInputStream(Reference reference2, XmlDocument document) //TODO �������� ��������� ���� ��������� ��������� ����� ���� Reference https://referencesource.microsoft.com/#System.Security/system/security/cryptography/xml/reference.cs,ca6173686922de7a,references
+        private Stream GetHashInputStream(Reference reference2, XmlDocument document, object nodeList) //TODO �������� ��������� ���� ��������� ��������� ����� ���� Reference https://referencesource.microsoft.com/#System.Security/system/security/cryptography/xml/reference.cs,ca6173686922de7a,references
         {
             Assembly System_Security_Assembly = Assembly.Load("System.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             Type SignedXml_Type = typeof(SignedXml);
-            FieldInfo SignedXml_m_xmlResolver = SignedXml_Type.GetField("m_xmlResolver", BindingFlags.NonPublic | BindingFlags.Instance);
             Type Reference_Type = typeof(Reference);
+            Type TransformChain = typeof(TransformChain);
+            Type Utils_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.Utils");
+            Type CanonicalXmlNodeList = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.CanonicalXmlNodeList");
+
+            FieldInfo SignedXml_m_xmlResolver = SignedXml_Type.GetField("m_xmlResolver", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo SignedXml_m_context = SignedXml_Type.GetField("m_context", BindingFlags.NonPublic | BindingFlags.Instance);
             FieldInfo Reference_m_refTarget = Reference_Type.GetField("m_refTarget", BindingFlags.NonPublic | BindingFlags.Instance);
             FieldInfo Reference_m_refTargetType = Reference_Type.GetField("m_refTargetType", BindingFlags.NonPublic | BindingFlags.Instance);
-            Type TransformChain = typeof(TransformChain);
-            //MethodInfo TransformChain_TransformToOctetStream = TransformChain.GetMethod("TransformToOctetStream", BindingFlags.NonPublic | BindingFlags.Instance);//new Type[] { typeof(Stream), typeof(XmlResolver), typeof(string) }, );
+
             MethodInfo TransformChain_TransformToOctetStream = TransformChain.GetMethod("TransformToOctetStream", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(Stream), typeof(XmlResolver), typeof(string) }, null);
             MethodInfo TransformChain_TransformToOctetStream2 = TransformChain.GetMethod("TransformToOctetStream", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(XmlDocument), typeof(XmlResolver), typeof(string) }, null);
 
-            var resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), document.BaseURI);
+            MethodInfo Utils_DiscardComments = Utils_Type.GetMethod("DiscardComments", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo Utils_PreProcessDocumentInput = Utils_Type.GetMethod("PreProcessDocumentInput", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo Utils_PreProcessElementInput = Utils_Type.GetMethod("PreProcessElementInput", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo Utils_AllowDetachedSignature = Utils_Type.GetMethod("AllowDetachedSignature", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo Utils_GetIdFromLocalUri = Utils_Type.GetMethod("GetIdFromLocalUri", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo Utils_GetPropagatedAttributes = Utils_Type.GetMethod("GetPropagatedAttributes", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo Utils_HasAttribute = Utils_Type.GetMethod("HasAttribute", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo Utils_GetAttribute = Utils_Type.GetMethod("GetAttribute", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo Utils_AddNamespaces = Utils_Type.GetMethod("AddNamespaces", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(XmlElement), CanonicalXmlNodeList }, null);
+
             var reference_m_refTargetType = (int)Reference_m_refTargetType.GetValue(reference2);
 
+            string baseUri = (document == null ? System.Environment.CurrentDirectory + "\\" : document.BaseURI);
+            XmlResolver resolver = null;
+            object m_namespaces = null;
             switch (reference_m_refTargetType) 
             {
                 case 0:
                     var reference_m_refTarget = Reference_m_refTarget.GetValue(reference2);
                     var stream = (Stream)reference_m_refTarget;
+                    resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
                     return (Stream)TransformChain_TransformToOctetStream.Invoke(reference2.TransformChain, new object[] { stream, resolver, reference2.Uri });
                 case 2:
+                    if (reference2.Uri == null)
+                    {
+                        resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+                        return (Stream)TransformChain_TransformToOctetStream.Invoke(reference2.TransformChain, new object[] { null, resolver, reference2.Uri });
+                    }
+                    else if (reference2.Uri.Length == 0)
+                    {
+                        if (document == null)
+                            throw new Exception("Что-то пошло не так");
 
-                    if (document == null)
-                        throw new Exception("������ �������� m_containingDocument");
+                        resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+                        var docWithNoComments = Utils_DiscardComments.Invoke(null, new object[] { Utils_PreProcessDocumentInput.Invoke(null, new object[] { document, resolver, baseUri }) });
+                        return (Stream)TransformChain_TransformToOctetStream2.Invoke(reference2.TransformChain, new object[] { docWithNoComments, resolver, baseUri });
+                    }
+                    else if (reference2.Uri.First() == '#')
+                    {
+                        var utilsGetIdFromLocalUriParameters = new object[] { reference2.Uri, true };
+                        string idref = (string)Utils_GetIdFromLocalUri.Invoke(null, utilsGetIdFromLocalUriParameters);
+                        var discardComments = (bool)utilsGetIdFromLocalUriParameters[1];
+                        if(idref == "xpointer(/)")
+                        {
+                            if (document == null)
+                                throw new Exception("Что-то пошло не так");
 
-                    Type Utils_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.Utils");
-                    MethodInfo Utils_DiscardComments = Utils_Type.GetMethod("DiscardComments", BindingFlags.NonPublic | BindingFlags.Static);
-                    MethodInfo Utils_PreProcessDocumentInput = Utils_Type.GetMethod("PreProcessDocumentInput", BindingFlags.NonPublic | BindingFlags.Static);
+                            resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+                            return (Stream)TransformChain_TransformToOctetStream2.Invoke(reference2.TransformChain, new object[] { Utils_PreProcessDocumentInput.Invoke(null, new object[] { document, resolver, baseUri }), resolver, baseUri });
+                        }
 
-                    var docWithNoComments = Utils_DiscardComments.Invoke(null, new object[] { Utils_PreProcessDocumentInput.Invoke(null, new object[] { document, resolver, document.BaseURI }) });
-                    return (Stream)TransformChain_TransformToOctetStream2.Invoke(reference2.TransformChain, new object[] { docWithNoComments, resolver, document.BaseURI });
+                        XmlElement elem = this.GetIdElement(document, idref);
+                        if (elem != null)
+                            m_namespaces = Utils_GetPropagatedAttributes.Invoke(null, new object[] { (elem.ParentNode as XmlElement) });
+
+                        if (elem == null)
+                        {
+                            // Go throw the referenced items passed in
+                            if (nodeList != null)
+                            {
+                                foreach (var node in nodeList as IEnumerable)
+                                {
+                                    XmlElement tempElem = node as XmlElement;
+                                    if ((tempElem != null) &&
+                                       (bool)Utils_HasAttribute.Invoke(null, new object[] { tempElem, "Id", SignedXml.XmlDsigNamespaceUrl }) && //(Utils.HasAttribute(tempElem, "Id", SignedXml.XmlDsigNamespaceUrl)) && 
+                                       ((string)Utils_GetAttribute.Invoke(null, new object[] { tempElem, "Id", SignedXml.XmlDsigNamespaceUrl })).Equals(idref))  //(Utils.GetAttribute(tempElem, "Id", SignedXml.XmlDsigNamespaceUrl).Equals(idref)))
+                                    {
+                                        elem = tempElem;
+                                        var m_context = SignedXml_m_context.GetValue(this);
+                                        if (m_context != null)
+                                            m_namespaces = Utils_GetPropagatedAttributes.Invoke(null, new object[] { m_context });
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (elem == null)
+                            throw new Exception("Что-то пошло не так");
+
+                        XmlDocument normDocument = (XmlDocument)Utils_PreProcessElementInput.Invoke(null, new object[] { elem, resolver, baseUri }); //Utils.PreProcessElementInput();
+                        // Add the propagated attributes
+                        Utils_AddNamespaces.Invoke(null, new object[] { normDocument.DocumentElement, m_namespaces });
+
+                        resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+
+                        if (discardComments)
+                        {
+                            // We should discard comments before going into the transform chain
+                            XmlDocument docWithNoComments = (XmlDocument)Utils_DiscardComments.Invoke(null, new object[] { normDocument }); // Utils.DiscardComments(normDocument);
+                            return (Stream)TransformChain_TransformToOctetStream2.Invoke(reference2.TransformChain, new object[] { docWithNoComments, resolver, baseUri });
+                        }
+                        else
+                        {
+                            // This is an XPointer reference, do not discard comments!!!
+                            return (Stream)TransformChain_TransformToOctetStream2.Invoke(reference2.TransformChain, new object[] { normDocument, resolver, baseUri });
+                        }
+
+                    }
+                    else if((bool)Utils_AllowDetachedSignature.Invoke(null, new object[] { }))
+                    {
+                        throw new Exception("Не реализовано");
+                    }
+                    else
+                    {
+                        throw new Exception("Не получилось зарезолвить Reference");
+                    }
                 default:
-                    throw new Exception("�� �������������� ��� Reference");
+                    throw new Exception("Что-то пошло не так");
             }
         }
 

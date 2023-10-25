@@ -396,60 +396,36 @@ namespace Microsoft.Xades
             // check to see if it's a standard ID reference
             XmlElement retVal = null;
 
+            var xmlDocumentCloned = new XmlDocument();
 
-            if (idValue == this.signedPropertiesIdBuffer)
+            if (xmlDocument == null)
+                xmlDocumentCloned.LoadXml("<Root></Root>"); // Add this to force signature with namespaces
+            else
+                xmlDocumentCloned.LoadXml(xmlDocument.OuterXml);
+
+            
+            if(Signature.ObjectList.Count == 1 && Signature.ObjectList[0] is DataObject dataObject)
             {
-                var xmlDocumentCloned = new XmlDocument();
+                xmlDocumentCloned.DocumentElement.AppendChild(
+                    xmlDocumentCloned.ImportNode(dataObject.GetXml(), true));
+            }
+            
+            xmlDocumentCloned.DocumentElement.AppendChild(
+                    xmlDocumentCloned.ImportNode(Signature.KeyInfo.GetXml(), true));
 
-                if (xmlDocument == null)
-                {
-                    xmlDocumentCloned.LoadXml("<Root></Root>"); // Add this to force signature with namespaces
-                    xmlDocumentCloned.DocumentElement.AppendChild(
-                        xmlDocumentCloned.ImportNode(cachedXadesObjectDocument.DocumentElement, true));
-                }
-                else
-                {
-                    xmlDocumentCloned.LoadXml(xmlDocument.OuterXml);
-                    xmlDocumentCloned.DocumentElement.AppendChild(
-                        xmlDocumentCloned.ImportNode(cachedXadesObjectDocument.DocumentElement, true));
-                }
+            retVal = base.GetIdElement(xmlDocumentCloned, idValue);
+            if (retVal != null)
+            {
+                return retVal;
+            }
 
-
-                retVal = base.GetIdElement(xmlDocumentCloned, idValue);
+            // if not, search for custom ids
+            foreach (string idAttr in idAttrs)
+            {
+                retVal = xmlDocument.SelectSingleNode("//*[@" + idAttr + "=\"" + idValue + "\"]") as XmlElement;
                 if (retVal != null)
                 {
-                    return retVal;
-                }
-
-                // if not, search for custom ids
-                foreach (string idAttr in idAttrs)
-                {
-                    retVal = this.cachedXadesObjectDocument.SelectSingleNode("//*[@" + idAttr + "=\"" + idValue + "\"]") as XmlElement;
-                    if (retVal != null)
-                    {
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                if (xmlDocument != null)
-                {
-                    retVal = base.GetIdElement(xmlDocument, idValue);
-                    if (retVal != null)
-                    {
-                        return retVal;
-                    }
-
-                    // if not, search for custom ids
-                    foreach (string idAttr in idAttrs)
-                    {
-                        retVal = xmlDocument.SelectSingleNode("//*[@" + idAttr + "=\"" + idValue + "\"]") as XmlElement;
-                        if (retVal != null)
-                        {
-                            break;
-                        }
-                    }
+                    break;
                 }
             }
 
@@ -518,12 +494,10 @@ namespace Microsoft.Xades
 
                 this.AddReference(reference); //Add the XAdES object reference
 
-                this.cachedXadesObjectDocument = new XmlDocument();
                 bufferXmlElement = xadesObject.GetXml();
-
-                // Add "ds" namespace prefix to all XmlDsig nodes in the XAdES object
                 SetPrefix("ds", bufferXmlElement);
 
+                this.cachedXadesObjectDocument = new XmlDocument();
                 this.cachedXadesObjectDocument.PreserveWhitespace = true;
                 this.cachedXadesObjectDocument.LoadXml(bufferXmlElement.OuterXml); //Cache to XAdES object for later use
 
@@ -1460,8 +1434,9 @@ namespace Microsoft.Xades
             }
         }
 
-        private Stream GetHashInputStream(Reference reference2, XmlDocument document, object nodeList) //TODO �������� ��������� ���� ��������� ��������� ����� ���� Reference https://referencesource.microsoft.com/#System.Security/system/security/cryptography/xml/reference.cs,ca6173686922de7a,references
+        private Stream GetHashInputStream(Reference reference2, XmlDocument document, object nodeList) //TODO Reference https://referencesource.microsoft.com/#System.Security/system/security/cryptography/xml/reference.cs,ca6173686922de7a,references
         {
+            //TODO Дорогой дневник, мне не подобрать слов, чтобы описать боль и унижение, которое я испытал. Черт знает, что с этим делать всем. По идеи нужно искать другое решение
             Assembly System_Security_Assembly = Assembly.Load("System.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             Type SignedXml_Type = typeof(SignedXml);
             Type Reference_Type = typeof(Reference);

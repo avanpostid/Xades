@@ -13,7 +13,7 @@ namespace Microsoft.Xades.UnitTest
         [TestMethod]
         public void Test()
         {
-            var contentStr = "<xml></xml>";
+            var contentStr = "<privet></privet>";
 
             XmlDocument xmlDocument = new XmlDocument();
             xmlDocument.PreserveWhitespace = true;
@@ -33,27 +33,7 @@ namespace Microsoft.Xades.UnitTest
 
             xadesSignedXml.KeyInfo = CreateKeyInfo(signatureId);
 
-            //xadesSignedXml.AddObject(CreateXadesObject(signatureId));
-
-            XadesObject xadesObject = new XadesObject();
-            xadesObject.Id = $"obj-{signatureId}";
-            xadesObject.QualifyingProperties.Target = $"#sig-{signatureId}";
-            xadesObject.QualifyingProperties.SignedProperties.Id = $"signedprops-{signatureId}";
-            var signedSignatureProperties = xadesObject.QualifyingProperties.SignedProperties.SignedSignatureProperties;
-            var cert = new Cert();
-            var dataSingleCert = new KeyInfoX509Data();
-            dataSingleCert.AddIssuerSerial("issuername", "12312");
-            cert.IssuerSerial.X509IssuerName = ((X509IssuerSerial)dataSingleCert.IssuerSerials[0]).IssuerName.Replace(", ", ",");
-            cert.IssuerSerial.X509SerialNumber = ((X509IssuerSerial)dataSingleCert.IssuerSerials[0]).SerialNumber;
-            cert.CertDigest.DigestMethod.Algorithm = SignedXml.XmlDsigSHA1Url;
-            cert.CertDigest.DigestValue = new byte[] { 1, 2, 3, 4 };
-            signedSignatureProperties.SigningCertificate.CertCollection.Add(cert);
-            signedSignatureProperties.SigningTime = DateTime.Now;
-            signedSignatureProperties.SignaturePolicyIdentifierSpecified = false;
-            xadesSignedXml.AddXadesObject(xadesObject,
-                new XmlDsigC14NTransform(),
-                null,
-                "http://uri.etsi.org/01903#SignedProperties");
+            xadesSignedXml.AddObject(CreateXadesObject(signatureId));            
 
             xadesSignedXml.ComputeSignature();
 
@@ -61,7 +41,7 @@ namespace Microsoft.Xades.UnitTest
             var importSignature = xmlDocument.ImportNode(xmlDigitalSignature, true);
             xmlDocument.DocumentElement.AppendChild((XmlNode)importSignature);
 
-            var result = Encoding.UTF8.GetBytes(xmlDocument.OuterXml);
+            var result = xmlDocument.OuterXml;
         }
 
         private Reference CreateReference(Guid signatureId)
@@ -102,13 +82,12 @@ namespace Microsoft.Xades.UnitTest
 
         public DataObject CreateXadesObject(Guid id)
         {
-            
-
             var xmlDocument = new XmlDocument();
             xmlDocument.LoadXml($@"<xades:QualifyingProperties xmlns:xades=""http://uri.etsi.org/01903/v1.4.1#"" Target=""sig-{id}""><xades:SignedProperties Id=""signedprops-{id}""><xades:SignedSignatureProperties/></xades:SignedProperties></xades:QualifyingProperties>"); //Cache to XAdES object for later use
             var dataObject = new DataObject();
             dataObject.Id = $"obj-{id}";
-            dataObject.Data = xmlDocument.ChildNodes;
+            dataObject.Data = xmlDocument.ChildNodes;            
+
             return dataObject;
         }
 

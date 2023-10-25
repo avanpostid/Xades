@@ -43,7 +43,9 @@ namespace Microsoft.Xades.UnitTest
 
             // Build main element
             var xadesSignedXml = new XadesSignedXml(new XmlDocument());
-            
+            xadesSignedXml.XadesDigestProvider = new MockDigestProvider();
+            xadesSignedXml.XadesSignatureProvider = new MockSignatureProvider();
+
 
             var signId = "xmldsig-8be8b605-2be8-4977-81f3-3765814c0a7e";// + signGuid;
 
@@ -153,6 +155,8 @@ namespace Microsoft.Xades.UnitTest
             envelopedSignatureXmlDocument.LoadXml(stringXml);
 
             var xadesSignedXml = new XadesSignedXml(envelopedSignatureXmlDocument);
+            xadesSignedXml.XadesDigestProvider = new MockDigestProvider();
+            xadesSignedXml.XadesSignatureProvider = new MockSignatureProvider();
 
             // Create reference
             var reference = new Reference

@@ -45,6 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MockProvidersUnitTests.cs" />
+    <Compile Include="Mocks\MockDigestProvider.cs" />
+    <Compile Include="Mocks\MockSignatureProvider.cs" />
     <Compile Include="RegistryCheck.cs" />
     <Compile Include="SignatureManager.cs" />
     <Compile Include="UnitTest1.cs" />

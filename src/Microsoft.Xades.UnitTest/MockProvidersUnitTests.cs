@@ -13,7 +13,7 @@ namespace Microsoft.Xades.UnitTest
         [TestMethod]
         public void Test()
         {
-            var contentStr = "<privet></privet>";
+            var contentStr = "<privet><tag1>asdf</tag1></privet>";
 
             XmlDocument xmlDocument = new XmlDocument();
             xmlDocument.PreserveWhitespace = true;

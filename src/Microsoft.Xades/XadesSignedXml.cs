@@ -409,9 +409,14 @@ namespace Microsoft.Xades
                 xmlDocumentCloned.DocumentElement.AppendChild(
                     xmlDocumentCloned.ImportNode(dataObject.GetXml(), true));
             }
-            
-            xmlDocumentCloned.DocumentElement.AppendChild(
-                    xmlDocumentCloned.ImportNode(Signature.KeyInfo.GetXml(), true));
+
+            if(Signature.KeyInfo != null)
+            {
+                var keyInfoXml = Signature.KeyInfo.GetXml();
+                SetPrefix("ds", keyInfoXml);
+                xmlDocumentCloned.DocumentElement.AppendChild(
+                        xmlDocumentCloned.ImportNode(keyInfoXml, true));
+            }
 
             retVal = base.GetIdElement(xmlDocumentCloned, idValue);
             if (retVal != null)
@@ -1646,7 +1651,9 @@ namespace Microsoft.Xades
 
             canonicalizationMethodObject.LoadInput(document);
 
-            return ((MemoryStream)canonicalizationMethodObject.GetOutput()).ToArray();
+            var result = ((MemoryStream)canonicalizationMethodObject.GetOutput()).ToArray();
+
+            return result;
         }
 
         #endregion

@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net47;netstandard2.0</TargetFrameworks>
-    <Company>Microsoft France</Company>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Company>Avanpost Russia</Company>
     <Product>XAdES Starter Kit</Product>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Refreshed Xades Kit from Microsoft France via MStachyra</Description>
-    <Version>1.0.2</Version>
+    <Description>Refreshed Xades Kit from Avanpost via Maxim Khoroshenkov</Description>
+    <Version>1.0.3-beta2</Version>
+    <AssemblyName>Avanpost.Microsoft.Xades</AssemblyName>
   </PropertyGroup>
 
   <!-- .NET Standard 2.0 references, compilation flags and build options -->
@@ -16,23 +17,5 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Security.Cryptography.Xml" Version="4.5.0" />
   </ItemGroup>
-
-
-  <!-- .NET 4.7 references, compilation flags and build options -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net47' ">
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Security" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Configuration" />
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net47'">
-    <DefineConstants>NET47;NETFULL</DefineConstants>
-  </PropertyGroup>
-
+  
 </Project>

@@ -136,7 +136,7 @@ namespace Microsoft.Xades
     /// signatures.  The property SignatureStandard will indicate the type of the
     /// signature: XMLDSIG or XAdES.
     /// </summary>
-    public class XadesSignedXml : System.Security.Cryptography.Xml.SignedXml
+    public class XadesSignedXml : SignedXml
     {
         #region Constants
         /// <summary>
@@ -1359,17 +1359,17 @@ namespace Microsoft.Xades
 
             //this.m_refProcessed = new bool[references.Count];
             Type SignedXml_Type = typeof(SignedXml);
-            FieldInfo SignedXml_m_refProcessed = SignedXml_Type.GetField("m_refProcessed", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo SignedXml_m_refProcessed = SignedXml_Type.GetField("_refProcessed", BindingFlags.NonPublic | BindingFlags.Instance);
             SignedXml_m_refProcessed.SetValue(this, new bool[references.Count]);
             //
 
             //this.m_refLevelCache = new int[references.Count];
-            FieldInfo SignedXml_m_refLevelCache = SignedXml_Type.GetField("m_refLevelCache", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo SignedXml_m_refLevelCache = SignedXml_Type.GetField("_refLevelCache", BindingFlags.NonPublic | BindingFlags.Instance);
             SignedXml_m_refLevelCache.SetValue(this, new int[references.Count]);
             //
 
             //ReferenceLevelSortOrder comparer = new ReferenceLevelSortOrder();
-            Assembly System_Security_Assembly = Assembly.Load("System.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+            Assembly System_Security_Assembly = Assembly.Load("System.Security.Cryptography.Xml, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51");
             Type ReferenceLevelSortOrder_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.SignedXml+ReferenceLevelSortOrder");
             ConstructorInfo ReferenceLevelSortOrder_Constructor = ReferenceLevelSortOrder_Type.GetConstructor(new Type[] { });
             Object comparer = ReferenceLevelSortOrder_Constructor.Invoke(null);
@@ -1403,7 +1403,7 @@ namespace Microsoft.Xades
                 //
             }
 
-            FieldInfo SignedXml_m_containingDocument = SignedXml_Type.GetField("m_containingDocument", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo SignedXml_m_containingDocument = SignedXml_Type.GetField("_containingDocument", BindingFlags.NonPublic | BindingFlags.Instance);
             
             foreach (Reference reference2 in list2)
             {
@@ -1442,17 +1442,19 @@ namespace Microsoft.Xades
         private Stream GetHashInputStream(Reference reference2, XmlDocument document, object nodeList) //TODO Reference https://referencesource.microsoft.com/#System.Security/system/security/cryptography/xml/reference.cs,ca6173686922de7a,references
         {
             //TODO Дорогой дневник, мне не подобрать слов, чтобы описать боль и унижение, которое я испытал. Черт знает, что с этим делать всем. По идеи нужно искать другое решение
-            Assembly System_Security_Assembly = Assembly.Load("System.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+            //TODO Привет из будущего ) 
+            
+            Assembly System_Security_Assembly = Assembly.Load("System.Security.Cryptography.Xml, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51");
             Type SignedXml_Type = typeof(SignedXml);
             Type Reference_Type = typeof(Reference);
             Type TransformChain = typeof(TransformChain);
             Type Utils_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.Utils");
             Type CanonicalXmlNodeList = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.CanonicalXmlNodeList");
 
-            FieldInfo SignedXml_m_xmlResolver = SignedXml_Type.GetField("m_xmlResolver", BindingFlags.NonPublic | BindingFlags.Instance);
-            FieldInfo SignedXml_m_context = SignedXml_Type.GetField("m_context", BindingFlags.NonPublic | BindingFlags.Instance);
-            FieldInfo Reference_m_refTarget = Reference_Type.GetField("m_refTarget", BindingFlags.NonPublic | BindingFlags.Instance);
-            FieldInfo Reference_m_refTargetType = Reference_Type.GetField("m_refTargetType", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo SignedXml_xmlResolver = SignedXml_Type.GetField("_xmlResolver", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo SignedXml_context = SignedXml_Type.GetField("_context", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo Reference_refTarget = Reference_Type.GetField("_refTarget", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo Reference_refTargetType = Reference_Type.GetField("_refTargetType", BindingFlags.NonPublic | BindingFlags.Instance);
 
             MethodInfo TransformChain_TransformToOctetStream = TransformChain.GetMethod("TransformToOctetStream", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(Stream), typeof(XmlResolver), typeof(string) }, null);
             MethodInfo TransformChain_TransformToOctetStream2 = TransformChain.GetMethod("TransformToOctetStream", BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[] { typeof(XmlDocument), typeof(XmlResolver), typeof(string) }, null);
@@ -1467,7 +1469,7 @@ namespace Microsoft.Xades
             MethodInfo Utils_GetAttribute = Utils_Type.GetMethod("GetAttribute", BindingFlags.NonPublic | BindingFlags.Static);
             MethodInfo Utils_AddNamespaces = Utils_Type.GetMethod("AddNamespaces", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(XmlElement), CanonicalXmlNodeList }, null);
 
-            var reference_m_refTargetType = (int)Reference_m_refTargetType.GetValue(reference2);
+            var reference_m_refTargetType = (int)Reference_refTargetType.GetValue(reference2);
 
             string baseUri = (document == null ? System.Environment.CurrentDirectory + "\\" : document.BaseURI);
             XmlResolver resolver = null;
@@ -1475,14 +1477,14 @@ namespace Microsoft.Xades
             switch (reference_m_refTargetType) 
             {
                 case 0:
-                    var reference_m_refTarget = Reference_m_refTarget.GetValue(reference2);
+                    var reference_m_refTarget = Reference_refTarget.GetValue(reference2);
                     var stream = (Stream)reference_m_refTarget;
-                    resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+                    resolver = ((XmlResolver)SignedXml_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
                     return (Stream)TransformChain_TransformToOctetStream.Invoke(reference2.TransformChain, new object[] { stream, resolver, reference2.Uri });
                 case 2:
                     if (reference2.Uri == null)
                     {
-                        resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+                        resolver = ((XmlResolver)SignedXml_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
                         return (Stream)TransformChain_TransformToOctetStream.Invoke(reference2.TransformChain, new object[] { null, resolver, reference2.Uri });
                     }
                     else if (reference2.Uri.Length == 0)
@@ -1490,7 +1492,7 @@ namespace Microsoft.Xades
                         if (document == null)
                             throw new Exception("Что-то пошло не так");
 
-                        resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+                        resolver = ((XmlResolver)SignedXml_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
                         var docWithNoComments = Utils_DiscardComments.Invoke(null, new object[] { Utils_PreProcessDocumentInput.Invoke(null, new object[] { document, resolver, baseUri }) });
                         return (Stream)TransformChain_TransformToOctetStream2.Invoke(reference2.TransformChain, new object[] { docWithNoComments, resolver, baseUri });
                     }
@@ -1504,7 +1506,7 @@ namespace Microsoft.Xades
                             if (document == null)
                                 throw new Exception("Что-то пошло не так");
 
-                            resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+                            resolver = ((XmlResolver)SignedXml_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
                             return (Stream)TransformChain_TransformToOctetStream2.Invoke(reference2.TransformChain, new object[] { Utils_PreProcessDocumentInput.Invoke(null, new object[] { document, resolver, baseUri }), resolver, baseUri });
                         }
 
@@ -1525,7 +1527,7 @@ namespace Microsoft.Xades
                                        ((string)Utils_GetAttribute.Invoke(null, new object[] { tempElem, "Id", SignedXml.XmlDsigNamespaceUrl })).Equals(idref))  //(Utils.GetAttribute(tempElem, "Id", SignedXml.XmlDsigNamespaceUrl).Equals(idref)))
                                     {
                                         elem = tempElem;
-                                        var m_context = SignedXml_m_context.GetValue(this);
+                                        var m_context = SignedXml_context.GetValue(this);
                                         if (m_context != null)
                                             m_namespaces = Utils_GetPropagatedAttributes.Invoke(null, new object[] { m_context });
                                         break;
@@ -1541,7 +1543,7 @@ namespace Microsoft.Xades
                         // Add the propagated attributes
                         Utils_AddNamespaces.Invoke(null, new object[] { normDocument.DocumentElement, m_namespaces });
 
-                        resolver = ((XmlResolver)SignedXml_m_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
+                        resolver = ((XmlResolver)SignedXml_xmlResolver.GetValue(this)) ?? new XmlSecureResolver(new XmlUrlResolver(), baseUri);
 
                         if (discardComments)
                         {
@@ -1590,7 +1592,7 @@ namespace Microsoft.Xades
         private bool IsC14NDigestCachedExistsAndValid()
         {
             Type SignedXml_Type = typeof(SignedXml);
-            FieldInfo SignedXml_bCacheValid = SignedXml_Type.GetField("bCacheValid", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo SignedXml_bCacheValid = SignedXml_Type.GetField("_bCacheValid", BindingFlags.NonPublic | BindingFlags.Instance);
             bool bCacheValid = (bool)SignedXml_bCacheValid.GetValue(this);
             Type SignedInfo_Type = typeof(SignedInfo);
             PropertyInfo SignedInfo_CacheValid = SignedInfo_Type.GetProperty("CacheValid", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -1617,27 +1619,27 @@ namespace Microsoft.Xades
         {
             Type SignedXml_Type = typeof(SignedXml);
 
-            FieldInfo SignedXml_m_containingDocument = SignedXml_Type.GetField("m_containingDocument", BindingFlags.NonPublic | BindingFlags.Instance);
-            XmlDocument m_containingDocument = (XmlDocument)SignedXml_m_containingDocument.GetValue(this);
+            FieldInfo SignedXml_containingDocument = SignedXml_Type.GetField("_containingDocument", BindingFlags.NonPublic | BindingFlags.Instance);
+            XmlDocument m_containingDocument = (XmlDocument)SignedXml_containingDocument.GetValue(this);
             string securityUrl = (m_containingDocument == null) ? null : m_containingDocument.BaseURI;
 
-            FieldInfo SignedXml_m_bResolverSet = SignedXml_Type.GetField("m_bResolverSet", BindingFlags.NonPublic | BindingFlags.Instance);
-            bool m_bResolverSet = (bool)SignedXml_m_bResolverSet.GetValue(this);
-            FieldInfo SignedXml_m_xmlResolver = SignedXml_Type.GetField("m_xmlResolver", BindingFlags.NonPublic | BindingFlags.Instance);
-            XmlResolver m_xmlResolver = (XmlResolver)SignedXml_m_xmlResolver.GetValue(this);
+            FieldInfo SignedXml_bResolverSet = SignedXml_Type.GetField("_bResolverSet", BindingFlags.NonPublic | BindingFlags.Instance);
+            bool m_bResolverSet = (bool)SignedXml_bResolverSet.GetValue(this);
+            FieldInfo SignedXml_xmlResolver = SignedXml_Type.GetField("_xmlResolver", BindingFlags.NonPublic | BindingFlags.Instance);
+            XmlResolver m_xmlResolver = (XmlResolver)SignedXml_xmlResolver.GetValue(this);
             XmlResolver xmlResolver = m_bResolverSet ? m_xmlResolver : new XmlSecureResolver(new XmlUrlResolver(), securityUrl);
             
-            Assembly System_Security_Assembly = Assembly.Load("System.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+            Assembly System_Security_Assembly = Assembly.Load("System.Security.Cryptography.Xml, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51");
             Type Utils_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.Utils");
             MethodInfo Utils_PreProcessElementInput = Utils_Type.GetMethod("PreProcessElementInput", BindingFlags.NonPublic | BindingFlags.Static);
             XmlElement xml = this.SignedInfo.GetXml();
             SetPrefix("ds", xml);
             XmlDocument document = (XmlDocument)Utils_PreProcessElementInput.Invoke(null, new object[] { xml, xmlResolver, securityUrl });
             
-            FieldInfo SignedXml_m_context = SignedXml_Type.GetField("m_context", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo SignedXml_context = SignedXml_Type.GetField("_context", BindingFlags.NonPublic | BindingFlags.Instance);
             MethodInfo Utils_GetPropagatedAttributes = Utils_Type.GetMethod("GetPropagatedAttributes", BindingFlags.NonPublic | BindingFlags.Static);
-            object m_context = SignedXml_m_context.GetValue(this);
-            object namespaces = (m_context == null) ? null : Utils_GetPropagatedAttributes.Invoke(null, new object[] { m_context });
+            object _context = SignedXml_context.GetValue(this);
+            object namespaces = (_context == null) ? null : Utils_GetPropagatedAttributes.Invoke(null, new object[] { _context });
             
             Type CanonicalXmlNodeList_Type = System_Security_Assembly.GetType("System.Security.Cryptography.Xml.CanonicalXmlNodeList");
             MethodInfo Utils_AddNamespaces = Utils_Type.GetMethod("AddNamespaces", BindingFlags.NonPublic | BindingFlags.Static, null, new Type[] { typeof(XmlElement), CanonicalXmlNodeList_Type }, null);

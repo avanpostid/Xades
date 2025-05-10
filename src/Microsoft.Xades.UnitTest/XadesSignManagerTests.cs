@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace Microsoft.Xades.UnitTest
 {
     [TestClass]
-    public class UnitTest1
+    public class XadesSignManagerTests
     {
         [TestMethod]
         public void SignExternalWithSHA256()
